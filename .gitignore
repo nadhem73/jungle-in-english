@@ -1,0 +1,101 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Frontend - Compiled output
+/frontend/dist
+/frontend/tmp
+/frontend/out-tsc
+/frontend/bazel-out
+/frontend/coverage
+
+# Frontend - Node
+/frontend/node_modules
+/frontend/npm-debug.log
+/frontend/yarn-error.log
+
+# Frontend - Angular
+/frontend/.angular/cache
+
+# Backend - Node.js (WebRTC Signaling)
+/backend/webrtc-signaling/node_modules
+/backend/webrtc-signaling/npm-debug.log
+/backend/webrtc-signaling/yarn-error.log
+/backend/webrtc-signaling/package-lock.json
+
+# Backend - Maven
+/backend/**/target/
+/backend/**/.mvn/
+/backend/**/mvnw
+/backend/**/mvnw.cmd
+
+# Backend - Gradle
+/backend/**/.gradle/
+/backend/**/build/
+/backend/**/gradle/
+/backend/**/gradlew
+/backend/**/gradlew.bat
+
+# Backend - Spring Boot
+/backend/**/*.log
+/backend/**/logs/*.json
+/backend/**/logs/*.gz
+/backend/**/*.jar
+/backend/**/*.war
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.iml
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# Miscellaneous
+.sass-cache/
+/connect.lock
+/libpeerconnection.log
+testem.log
+/typings
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+**/.env
+*.env
+!.env.example
+
+# Prometheus data and logs (generated at runtime)
+/data/
+/logs/
+
+# Temporary files
+temp_*.xml
+temp_*.yml
+temp_*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+dump.rdb

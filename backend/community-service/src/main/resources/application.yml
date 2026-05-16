@@ -1,0 +1,165 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: community-service
+  cloud:
+    config:
+      enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/englishflow_community
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+# File Upload Configuration
+file:
+  upload-dir: uploads
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+  expiration: 900000
+
+# Internal Service Communication
+internal:
+  service:
+    key: ${INTERNAL_SERVICE_KEY:englishflow-internal-service-secret-key-change-in-production-minimum-256-bits}
+
+# Logging
+logging:
+  level:
+    com.englishflow.community.security: DEBUG
+    org.springframework.security: DEBUG
+
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+    # Intervalle de récupération du registre (par défaut 30s, réduit à 5s)
+    registry-fetch-interval-seconds: 5
+    # Activer le healthcheck
+    healthcheck:
+      enabled: true
+    # Désactiver le cache local pour un rafraîchissement immédiat
+    disable-delta: false
+  instance:
+    prefer-ip-address: true
+    # Intervalle de heartbeat (par défaut 30s, réduit à 5s)
+    lease-renewal-interval-in-seconds: 5
+    # Durée avant expiration (par défaut 90s, réduit à 10s)
+    lease-expiration-duration-in-seconds: 10
+    # Métadonnées pour identifier l'instance avec le port
+    instance-id: ${spring.application.name}:${random.value}:${server.port}
+    # Statut initial
+    initial-status: STARTING
+    # Activer le healthcheck endpoint
+    health-check-url-path: /actuator/health
+
+# Feign Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+        loggerLevel: basic
+  circuitbreaker:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${ENVIRONMENT:dev}
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+    redis:
+      enabled: false
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    base-url: http://localhost:9411
+    enabled: true
+    service:
+      name: ${spring.application.name}
+
+# Redis Cache Configuration (désactivé par défaut - décommenter pour activer)
+#  cache:
+#    type: redis
+#    redis:
+#      time-to-live: 600000 # 10 minutes
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+#      timeout: 2000ms
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+
+---
+# Docker profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://postgres:5432/englishflow_community
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://jaeger:9411/api/v2/spans
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/

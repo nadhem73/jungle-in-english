@@ -1,0 +1,107 @@
+package com.englishflow.courses.controller;
+
+import com.englishflow.courses.dto.PackEnrollmentDTO;
+import com.englishflow.courses.service.IPackEnrollmentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/pack-enrollments")
+@RequiredArgsConstructor
+public class PackEnrollmentController {
+    
+    private final IPackEnrollmentService enrollmentService;
+    
+    @PostMapping
+    public ResponseEntity<?> enrollStudent(
+            @RequestParam Long studentId,
+            @RequestParam Long packId) {
+        try {
+            PackEnrollmentDTO enrollment = enrollmentService.enrollStudent(studentId, packId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(enrollment);
+        } catch (RuntimeException e) {
+            // Return error message in response body
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<PackEnrollmentDTO> getById(@PathVariable Long id) {
+        PackEnrollmentDTO enrollment = enrollmentService.getById(id);
+        return ResponseEntity.ok(enrollment);
+    }
+    
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<List<PackEnrollmentDTO>> getByStudentId(@PathVariable Long studentId) {
+        List<PackEnrollmentDTO> enrollments = enrollmentService.getByStudentId(studentId);
+        return ResponseEntity.ok(enrollments);
+    }
+    
+    @GetMapping("/student/{studentId}/active")
+    public ResponseEntity<List<PackEnrollmentDTO>> getActiveEnrollmentsByStudent(@PathVariable Long studentId) {
+        List<PackEnrollmentDTO> enrollments = enrollmentService.getActiveEnrollmentsByStudent(studentId);
+        return ResponseEntity.ok(enrollments);
+    }
+    
+    @GetMapping("/pack/{packId}")
+    public ResponseEntity<List<PackEnrollmentDTO>> getByPackId(@PathVariable Long packId) {
+        List<PackEnrollmentDTO> enrollments = enrollmentService.getByPackId(packId);
+        return ResponseEntity.ok(enrollments);
+    }
+    
+    @GetMapping("/tutor/{tutorId}")
+    public ResponseEntity<List<PackEnrollmentDTO>> getByTutorId(@PathVariable Long tutorId) {
+        List<PackEnrollmentDTO> enrollments = enrollmentService.getByTutorId(tutorId);
+        return ResponseEntity.ok(enrollments);
+    }
+    
+    @PutMapping("/{id}/progress")
+    public ResponseEntity<PackEnrollmentDTO> updateProgress(
+            @PathVariable Long id,
+            @RequestParam Integer progressPercentage) {
+        PackEnrollmentDTO updated = enrollmentService.updateProgress(id, progressPercentage);
+        return ResponseEntity.ok(updated);
+    }
+    
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Void> completeEnrollment(@PathVariable Long id) {
+        enrollmentService.completeEnrollment(id);
+        return ResponseEntity.ok().build();
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancelEnrollment(@PathVariable Long id) {
+        enrollmentService.cancelEnrollment(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/check")
+    public ResponseEntity<Boolean> isStudentEnrolled(
+            @RequestParam Long studentId,
+            @RequestParam Long packId) {
+        boolean enrolled = enrollmentService.isStudentEnrolled(studentId, packId);
+        return ResponseEntity.ok(enrolled);
+    }
+    
+    /**
+     * Get all student IDs enrolled with a specific tutor
+     */
+    @GetMapping("/tutor/{tutorId}/students")
+    public ResponseEntity<List<Long>> getStudentIdsByTutorId(@PathVariable Long tutorId) {
+        List<Long> studentIds = enrollmentService.getStudentIdsByTutorId(tutorId);
+        return ResponseEntity.ok(studentIds);
+    }
+    
+    /**
+     * Get pack completion rates for a tutor
+     */
+    @GetMapping("/tutor/{tutorId}/completion-rates")
+    public ResponseEntity<java.util.Map<String, Integer>> getPackCompletionRates(@PathVariable Long tutorId) {
+        java.util.Map<String, Integer> completionRates = enrollmentService.getPackCompletionRates(tutorId);
+        return ResponseEntity.ok(completionRates);
+    }
+}

@@ -1,0 +1,1290 @@
+<div class="recruitment-dashboard">
+  <!-- Premium Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="title-section">
+        <div class="title-icon-premium">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="2"/>
+            <circle cx="9" cy="7" r="4" stroke-width="2"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="2"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="title-text">
+          <h1>Recruitment Intelligence</h1>
+          <p>AI-Powered Talent Management System</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <!-- AI Insights Toggle -->
+        <button class="btn-ai-insights" (click)="toggleAIInsights()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke-width="2"/>
+            <path d="M2 17l10 5 10-5" stroke-width="2"/>
+            <path d="M2 12l10 5 10-5" stroke-width="2"/>
+          </svg>
+          <span>AI Insights</span>
+          <span class="pulse-dot"></span>
+        </button>
+        
+        <!-- Interviews Manager -->
+        <button class="btn-interviews" (click)="toggleInterviewsPanel()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+            <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+            <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+            <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+          </svg>
+          <span>Interviews</span>
+          <span class="badge-count" *ngIf="upcomingInterviewsCount > 0">{{ upcomingInterviewsCount }}</span>
+        </button>
+        
+        <!-- Calendar Link -->
+        <a routerLink="/dashboard/interview-calendar" class="btn-calendar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+            <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+            <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+            <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+          </svg>
+          <span>Full Calendar</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Insights Panel (Collapsible) -->
+  <div class="ai-insights-panel" *ngIf="showAIInsights" [@slideDown]>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-icon" style="background: linear-gradient(135deg, #2D5757 0%, #3D3D60 100%);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="insight-content">
+          <h4>Quick Decisions Needed</h4>
+          <p>{{ getPendingReviewCount() }} applications waiting for review</p>
+          <div class="insight-value">{{ getPendingReviewCount() }}</div>
+        </div>
+      </div>
+      
+      <div class="insight-card">
+        <div class="insight-icon" style="background: linear-gradient(135deg, #F6BD60 0%, #f5b04a 100%);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="insight-content">
+          <h4>Average Score</h4>
+          <p>Current batch performance</p>
+          <div class="insight-value">{{ getAverageScore() }}/100</div>
+        </div>
+      </div>
+      
+      <div class="insight-card">
+        <div class="insight-icon" style="background: linear-gradient(135deg, #3D3D60 0%, #2a2a4a 100%);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <polyline points="12 6 12 12 16 14" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="insight-content">
+          <h4>Avg. Processing Time</h4>
+          <p>From submission to decision</p>
+          <div class="insight-value">{{ getAvgProcessingTime() }} days</div>
+        </div>
+      </div>
+      
+      <div class="insight-card">
+        <div class="insight-icon" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke-width="2"/>
+            <polyline points="22 4 12 14.01 9 11.01" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="insight-content">
+          <h4>Acceptance Rate</h4>
+          <p>Last 30 days</p>
+          <div class="insight-value">{{ getAcceptanceRate() }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interviews Management Panel (Slide-in) -->
+  <div class="interviews-panel-overlay" *ngIf="showInterviewsPanel" (click)="toggleInterviewsPanel()" [@fadeIn]></div>
+  <div class="interviews-panel" *ngIf="showInterviewsPanel" [@slideInRight] (click)="$event.stopPropagation()">
+    <div class="panel-header">
+      <h3>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+          <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+          <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+          <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+        </svg>
+        Upcoming Interviews
+      </h3>
+      <button class="btn-close-panel" (click)="$event.stopPropagation(); toggleInterviewsPanel()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="panel-filters">
+      <button class="filter-btn-small" [class.active]="interviewFilter === 'all'" (click)="$event.stopPropagation(); interviewFilter = 'all'">
+        All
+      </button>
+      <button class="filter-btn-small" [class.active]="interviewFilter === 'today'" (click)="$event.stopPropagation(); filterInterviewsByDate('today')">
+        Today
+      </button>
+      <button class="filter-btn-small" [class.active]="interviewFilter === 'week'" (click)="$event.stopPropagation(); filterInterviewsByDate('week')">
+        This Week
+      </button>
+      <button class="filter-btn-small" [class.active]="interviewFilter === 'month'" (click)="$event.stopPropagation(); filterInterviewsByDate('month')">
+        This Month
+      </button>
+    </div>
+    
+    <div class="panel-content">
+      <div class="interview-item-compact" *ngFor="let interview of getFilteredInterviews()" [@fadeIn] (click)="$event.stopPropagation()">
+        <div class="interview-time-badge">
+          <div class="time">{{ formatInterviewTime(interview.interviewScheduledAt) }}</div>
+          <div class="date">{{ formatInterviewDate(interview.interviewScheduledAt) }}</div>
+        </div>
+        <div class="interview-info">
+          <h4>{{ interview.firstName }} {{ interview.lastName }}</h4>
+          <p>{{ interview.email }}</p>
+          <div class="interview-meta-compact">
+            <span class="meta-badge" *ngIf="interview.overallScore">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" stroke-width="2"/>
+              </svg>
+              {{ interview.overallScore }}
+            </span>
+            <span class="meta-badge status" [style.background]="getStatusColor(interview.status)">
+              {{ interview.status }}
+            </span>
+          </div>
+        </div>
+        <div class="interview-actions-compact">
+          <button class="btn-action-compact primary" (click)="$event.stopPropagation(); joinInterviewMeeting(interview)" title="Join Meeting" *ngIf="interview.interviewMeetingLink">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M15.5 5H9a7 7 0 0 0 0 14h6.5a7 7 0 0 0 0-14z" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3" stroke-width="2"/>
+            </svg>
+          </button>
+          <button class="btn-action-compact" (click)="$event.stopPropagation(); viewInterviewDetails(interview)" title="View Interview Details">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3" stroke-width="2"/>
+            </svg>
+          </button>
+          <button class="btn-action-compact" (click)="$event.stopPropagation(); rescheduleInterview(interview)" title="Reschedule">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="23 4 23 10 17 10" stroke-width="2"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke-width="2"/>
+            </svg>
+          </button>
+          <button class="btn-action-compact danger" (click)="$event.stopPropagation(); cancelInterviewFromPanel(interview)" title="Cancel Interview">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-width="2"/>
+              <line x1="15" y1="9" x2="9" y2="15" stroke-width="2"/>
+              <line x1="9" y1="9" x2="15" y2="15" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="empty-state-compact" *ngIf="getFilteredInterviews().length === 0">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+          <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+          <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+          <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+        </svg>
+        <p>No interviews scheduled</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="statistics-grid" *ngIf="statistics">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #F6BD60;">📊</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.total }}</div>
+        <div class="stat-label">Total Applications</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #2D5757;">📝</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.submitted }}</div>
+        <div class="stat-label">New Submissions</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #3D3D60;">🔍</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.underReview }}</div>
+        <div class="stat-label">Under Review</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #2D5757;">✅</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ statistics.accepted }}</div>
+        <div class="stat-label">Accepted</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <!-- View Selector -->
+    <div class="view-selector">
+      <button 
+        class="view-btn" 
+        [class.active]="currentView === 'kanban'"
+        (click)="currentView = 'kanban'"
+        title="Kanban View">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="3" width="7" height="18" stroke-width="2"/>
+          <rect x="14" y="3" width="7" height="10" stroke-width="2"/>
+        </svg>
+        <span>Kanban</span>
+      </button>
+      <button 
+        class="view-btn" 
+        [class.active]="currentView === 'timeline'"
+        (click)="currentView = 'timeline'"
+        title="Timeline View">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <line x1="12" y1="2" x2="12" y2="22" stroke-width="2"/>
+          <circle cx="12" cy="6" r="3" stroke-width="2"/>
+          <circle cx="12" cy="12" r="3" stroke-width="2"/>
+          <circle cx="12" cy="18" r="3" stroke-width="2"/>
+        </svg>
+        <span>Timeline</span>
+      </button>
+      <button 
+        class="view-btn" 
+        [class.active]="currentView === 'grid'"
+        (click)="currentView = 'grid'"
+        title="Grid View">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="3" width="7" height="7" stroke-width="2"/>
+          <rect x="14" y="3" width="7" height="7" stroke-width="2"/>
+          <rect x="3" y="14" width="7" height="7" stroke-width="2"/>
+          <rect x="14" y="14" width="7" height="7" stroke-width="2"/>
+        </svg>
+        <span>Grid</span>
+      </button>
+      <button 
+        class="view-btn" 
+        [class.active]="currentView === 'analytics'"
+        (click)="currentView = 'analytics'"
+        title="Analytics View">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M3 3v18h18" stroke-width="2"/>
+          <path d="M7 16l4-8 4 4 4-12" stroke-width="2"/>
+        </svg>
+        <span>Analytics</span>
+      </button>
+    </div>
+
+    <div class="search-box">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (ngModelChange)="applyFilters()"
+        placeholder="Search by name or email...">
+    </div>
+    
+    <div class="filter-group">
+      <select [(ngModel)]="selectedStatus" (ngModelChange)="applyFilters()">
+        <option value="ALL">All Status</option>
+        <option value="SUBMITTED">Submitted</option>
+        <option value="UNDER_REVIEW">Under Review</option>
+        <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
+        <option value="TEST_PENDING">Test Pending</option>
+        <option value="TEST_COMPLETED">Test Completed</option>
+        <option value="ACCEPTED">Accepted</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+    
+    <button class="btn-refresh" (click)="loadApplications()">
+      🔄 Refresh
+    </button>
+  </div>
+
+  <!-- Messages -->
+  <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <!-- Kanban Board -->
+  <div class="kanban-board" *ngIf="currentView === 'kanban'">
+    <div class="kanban-column" *ngFor="let column of columns">
+      <div class="column-header" [style.background]="column.color">
+        <h3>{{ column.title }}</h3>
+        <span class="count">{{ getApplicationsByStatus(column.status).length }}</span>
+      </div>
+      
+      <div class="column-content">
+        <div 
+          class="application-card" 
+          *ngFor="let app of getApplicationsByStatus(column.status)"
+          (click)="openDetailModal(app)">
+          
+          <div class="card-header">
+            <h4>{{ app.firstName }} {{ app.lastName }}</h4>
+            <span class="badge" [ngClass]="getStatusBadgeClass(app.status)">
+              {{ app.status }}
+            </span>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-row">
+              <span class="icon">📧</span>
+              <span class="text">{{ app.email }}</span>
+            </div>
+            <div class="info-row">
+              <span class="icon">📞</span>
+              <span class="text">{{ app.phone }}</span>
+            </div>
+            <div class="info-row">
+              <span class="icon">📅</span>
+              <span class="text">{{ formatDate(app.createdAt) }}</span>
+            </div>
+          </div>
+          
+          <div class="card-scores" *ngIf="app.overallScore">
+            <div class="score-item">
+              <span>Overall:</span>
+              <span class="score" [style.color]="getScoreColor(app.overallScore)">
+                {{ app.overallScore }}/100
+              </span>
+            </div>
+          </div>
+          
+          <div class="card-actions" (click)="$event.stopPropagation()">
+            <button class="btn-icon" (click)="openScoreModal(app)" title="Score">📊</button>
+            <button class="btn-icon" (click)="openInterviewModal(app)" title="Schedule Interview">📅</button>
+            <button class="btn-icon" (click)="openNoteModal(app)" title="Add Note">📝</button>
+            <button class="btn-icon" (click)="acceptApplication(app)" title="Accept" *ngIf="app.status !== 'ACCEPTED' && app.status !== 'REJECTED'">✅</button>
+            <button class="btn-icon btn-danger" (click)="openRejectModal(app)" title="Reject" *ngIf="app.status !== 'ACCEPTED' && app.status !== 'REJECTED'">❌</button>
+          </div>
+          
+          <!-- Quick Status Change -->
+          <div class="card-status-change" (click)="$event.stopPropagation()" *ngIf="app.status !== 'ACCEPTED' && app.status !== 'REJECTED'">
+            <label>Move to:</label>
+            <select (change)="onStatusChange(app, $event)" [value]="app.status">
+              <option value="SUBMITTED">New Applications</option>
+              <option value="UNDER_REVIEW">Under Review</option>
+              <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
+              <option value="TEST_PENDING">Test Pending</option>
+              <option value="TEST_COMPLETED">Test Completed</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="empty-state" *ngIf="getApplicationsByStatus(column.status).length === 0">
+          <p>No applications</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline View -->
+  <div class="timeline-view" *ngIf="currentView === 'timeline'">
+    <div class="timeline-container">
+      <div class="timeline-item" *ngFor="let app of filteredApplications" (click)="openDetailModal(app)">
+        <div class="timeline-marker" [style.background]="getStatusColor(app.status)">
+          <span class="timeline-icon">{{ getStatusIcon(app.status) }}</span>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">
+              <h3>{{ app.firstName }} {{ app.lastName }}</h3>
+              <span class="badge" [ngClass]="getStatusBadgeClass(app.status)">{{ app.status }}</span>
+            </div>
+            <div class="timeline-date">{{ formatDate(app.createdAt) }}</div>
+          </div>
+          <div class="timeline-body">
+            <div class="timeline-info">
+              <span class="info-label">📧 Email:</span>
+              <span>{{ app.email }}</span>
+            </div>
+            <div class="timeline-info">
+              <span class="info-label">📞 Phone:</span>
+              <span>{{ app.phone }}</span>
+            </div>
+            <div class="timeline-info" *ngIf="app.overallScore">
+              <span class="info-label">📊 Score:</span>
+              <span [style.color]="getScoreColor(app.overallScore)">{{ app.overallScore }}/100</span>
+            </div>
+          </div>
+          <div class="timeline-actions" (click)="$event.stopPropagation()">
+            <button class="btn-action-sm" (click)="openScoreModal(app)">Score</button>
+            <button class="btn-action-sm" (click)="openInterviewModal(app)">Interview</button>
+            <button class="btn-action-sm" (click)="openNoteModal(app)">Note</button>
+            <button class="btn-action-sm success" (click)="acceptApplication(app)" *ngIf="app.status !== 'ACCEPTED' && app.status !== 'REJECTED'">Accept</button>
+            <button class="btn-action-sm danger" (click)="openRejectModal(app)" *ngIf="app.status !== 'ACCEPTED' && app.status !== 'REJECTED'">Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid View -->
+  <div class="grid-view" *ngIf="currentView === 'grid'">
+    <div class="grid-container">
+      <div class="grid-card" *ngFor="let app of filteredApplications" (click)="openDetailModal(app)">
+        <div class="grid-card-header" [style.background]="getStatusColor(app.status)">
+          <div class="grid-avatar">{{ getInitials(app.firstName, app.lastName) }}</div>
+          <span class="badge-floating" [ngClass]="getStatusBadgeClass(app.status)">{{ getStatusIcon(app.status) }}</span>
+        </div>
+        <div class="grid-card-body">
+          <h3 class="grid-name">{{ app.firstName }} {{ app.lastName }}</h3>
+          <div class="grid-info">
+            <div class="grid-info-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/>
+                <polyline points="22,6 12,13 2,6" stroke-width="2"/>
+              </svg>
+              <span>{{ app.email }}</span>
+            </div>
+            <div class="grid-info-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke-width="2"/>
+              </svg>
+              <span>{{ app.phone }}</span>
+            </div>
+            <div class="grid-info-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+              </svg>
+              <span>{{ formatDate(app.createdAt) }}</span>
+            </div>
+          </div>
+          <div class="grid-score" *ngIf="app.overallScore">
+            <div class="score-circle" [style.background]="getScoreGradient(app.overallScore)">
+              <span class="score-number">{{ app.overallScore }}</span>
+              <span class="score-label">/100</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid-card-footer" (click)="$event.stopPropagation()">
+          <button class="btn-grid-action" (click)="openScoreModal(app)" title="Score">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="18" y1="20" x2="18" y2="10" stroke-width="2"/>
+              <line x1="12" y1="20" x2="12" y2="4" stroke-width="2"/>
+              <line x1="6" y1="20" x2="6" y2="14" stroke-width="2"/>
+            </svg>
+          </button>
+          <button class="btn-grid-action" (click)="openInterviewModal(app)" title="Interview">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+              <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+              <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+              <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+            </svg>
+          </button>
+          <button class="btn-grid-action" (click)="openNoteModal(app)" title="Note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="2"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="2"/>
+            </svg>
+          </button>
+          <button class="btn-grid-action success" (click)="acceptApplication(app)" *ngIf="app.status !== 'ACCEPTED' && app.status !== 'REJECTED'" title="Accept">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="20 6 9 17 4 12" stroke-width="2"/>
+            </svg>
+          </button>
+          <button class="btn-grid-action danger" (click)="openRejectModal(app)" *ngIf="app.status !== 'ACCEPTED' && app.status !== 'REJECTED'" title="Reject">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics View -->
+  <div class="analytics-view" *ngIf="currentView === 'analytics'">
+    <div class="analytics-container">
+      <!-- Status Distribution -->
+      <div class="analytics-card">
+        <h3>📊 Status Distribution</h3>
+        <div class="status-bars">
+          <div class="status-bar" *ngFor="let column of columns">
+            <div class="status-bar-label">
+              <span>{{ column.title }}</span>
+              <span class="status-bar-count">{{ getApplicationsByStatus(column.status).length }}</span>
+            </div>
+            <div class="status-bar-track">
+              <div class="status-bar-fill" 
+                   [style.width.%]="(getApplicationsByStatus(column.status).length / filteredApplications.length) * 100"
+                   [style.background]="column.color"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score Distribution -->
+      <div class="analytics-card">
+        <h3>🎯 Score Distribution</h3>
+        <div class="score-distribution">
+          <div class="score-range" *ngFor="let range of getScoreRanges()">
+            <div class="score-range-label">{{ range.label }}</div>
+            <div class="score-range-bar">
+              <div class="score-range-fill" 
+                   [style.width.%]="range.percentage"
+                   [style.background]="range.color"></div>
+            </div>
+            <div class="score-range-count">{{ range.count }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="analytics-card full-width">
+        <h3>⏱️ Recent Activity</h3>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let app of getRecentApplications()">
+            <div class="activity-icon" [style.background]="getStatusColor(app.status)">
+              {{ getStatusIcon(app.status) }}
+            </div>
+            <div class="activity-content">
+              <div class="activity-title">{{ app.firstName }} {{ app.lastName }}</div>
+              <div class="activity-description">{{ getActivityDescription(app) }}</div>
+            </div>
+            <div class="activity-time">{{ formatDate(app.createdAt) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accepted & Rejected Section -->
+  <div class="final-status-section">
+    <div class="status-column accepted">
+      <div class="status-column-header">
+        <h3>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke-width="2"/>
+            <polyline points="22 4 12 14.01 9 11.01" stroke-width="2"/>
+          </svg>
+          Accepted
+        </h3>
+        <span class="count-badge accepted">{{ statistics?.accepted || 0 }}</span>
+      </div>
+      <div class="application-cards-list">
+        <div class="final-status-card accepted" *ngFor="let app of getApplicationsByStatus('ACCEPTED')" (click)="openDetailModal(app)">
+          <div class="card-avatar accepted">
+            {{ getInitials(app.firstName, app.lastName) }}
+          </div>
+          <div class="card-info">
+            <h4>{{ app.firstName }} {{ app.lastName }}</h4>
+            <div class="card-meta">
+              <span class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/>
+                  <polyline points="22,6 12,13 2,6" stroke-width="2"/>
+                </svg>
+                {{ app.email }}
+              </span>
+              <span class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+                  <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+                  <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+                </svg>
+                {{ formatDate(app.reviewedAt || app.createdAt) }}
+              </span>
+            </div>
+            <div class="card-score" *ngIf="app.overallScore">
+              <span class="score-label">Score:</span>
+              <span class="score-value" [style.color]="getScoreColor(app.overallScore)">{{ app.overallScore }}/100</span>
+            </div>
+          </div>
+          <div class="card-actions-final" (click)="$event.stopPropagation()">
+            <button class="btn-action-icon" (click)="openDetailModal(app)" title="View Details">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" stroke-width="2"/>
+              </svg>
+            </button>
+            <button class="btn-action-icon warning" (click)="changeStatusFromFinal(app, 'UNDER_REVIEW')" title="Move to Under Review">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="1 4 1 10 7 10" stroke-width="2"/>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="empty-state-final" *ngIf="getApplicationsByStatus('ACCEPTED').length === 0">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/>
+            <line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/>
+          </svg>
+          <p>No accepted applications yet</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="status-column rejected">
+      <div class="status-column-header">
+        <h3>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <line x1="15" y1="9" x2="9" y2="15" stroke-width="2"/>
+            <line x1="9" y1="9" x2="15" y2="15" stroke-width="2"/>
+          </svg>
+          Rejected
+        </h3>
+        <span class="count-badge rejected">{{ statistics?.rejected || 0 }}</span>
+      </div>
+      <div class="application-cards-list">
+        <div class="final-status-card rejected" *ngFor="let app of getApplicationsByStatus('REJECTED')" (click)="openDetailModal(app)">
+          <div class="card-avatar rejected">
+            {{ getInitials(app.firstName, app.lastName) }}
+          </div>
+          <div class="card-info">
+            <h4>{{ app.firstName }} {{ app.lastName }}</h4>
+            <div class="card-meta">
+              <span class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/>
+                  <polyline points="22,6 12,13 2,6" stroke-width="2"/>
+                </svg>
+                {{ app.email }}
+              </span>
+              <span class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
+                  <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"/>
+                  <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"/>
+                </svg>
+                {{ formatDate(app.reviewedAt || app.createdAt) }}
+              </span>
+            </div>
+            <div class="card-rejection-reason" *ngIf="app.rejectionReason">
+              <span class="reason-label">Reason:</span>
+              <span class="reason-text">{{ app.rejectionReason }}</span>
+            </div>
+          </div>
+          <div class="card-actions-final" (click)="$event.stopPropagation()">
+            <button class="btn-action-icon" (click)="openDetailModal(app)" title="View Details">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" stroke-width="2"/>
+              </svg>
+            </button>
+            <button class="btn-action-icon warning" (click)="changeStatusFromFinal(app, 'UNDER_REVIEW')" title="Give Another Chance">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="1 4 1 10 7 10" stroke-width="2"/>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="empty-state-final" *ngIf="getApplicationsByStatus('REJECTED').length === 0">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/>
+            <line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/>
+          </svg>
+          <p>No rejected applications yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+  <div class="modal-content large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Application Details</h2>
+      <button class="btn-close" (click)="closeDetailModal()">×</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="selectedApplication">
+      <div class="detail-section">
+        <h3>Personal Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Name:</label>
+            <span>{{ selectedApplication.firstName }} {{ selectedApplication.lastName }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Email:</label>
+            <span>{{ selectedApplication.email }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Phone:</label>
+            <span>{{ selectedApplication.phone }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Status:</label>
+            <span class="badge" [ngClass]="getStatusBadgeClass(selectedApplication.status)">
+              {{ selectedApplication.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="detail-section" *ngIf="selectedApplication.overallScore">
+        <h3>Scores</h3>
+        <div class="scores-grid">
+          <div class="score-card">
+            <div class="score-label">Qualification</div>
+            <div class="score-value" [style.color]="getScoreColor(selectedApplication.qualificationScore)">
+              {{ selectedApplication.qualificationScore || 'N/A' }}
+            </div>
+          </div>
+          <div class="score-card">
+            <div class="score-label">Presentation</div>
+            <div class="score-value" [style.color]="getScoreColor(selectedApplication.presentationScore)">
+              {{ selectedApplication.presentationScore || 'N/A' }}
+            </div>
+          </div>
+          <div class="score-card">
+            <div class="score-label">Overall</div>
+            <div class="score-value" [style.color]="getScoreColor(selectedApplication.overallScore)">
+              {{ selectedApplication.overallScore || 'N/A' }}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="detail-section" *ngIf="selectedApplication.documents && selectedApplication.documents.length > 0">
+        <h3>📎 Documents ({{ selectedApplication.documents.length }})</h3>
+        <div class="documents-grid">
+          <div class="document-card" *ngFor="let doc of selectedApplication.documents">
+            <div class="document-card-header">
+              <span class="doc-icon-large">{{ getDocumentIcon(doc) }}</span>
+              <div class="doc-info">
+                <div class="doc-type-badge">{{ getDocumentTypeName(doc.type) }}</div>
+                <div class="doc-name" [title]="doc.fileName">{{ doc.fileName }}</div>
+                <div class="doc-meta">{{ formatFileSize(doc.fileSize) }} • {{ formatDate(doc.uploadedAt) }}</div>
+              </div>
+            </div>
+            <div class="document-card-actions">
+              <button class="btn-view" (click)="openDocumentModal(doc)" title="View Document">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke-width="2"/>
+                </svg>
+                View
+              </button>
+              <button class="btn-download-small" (click)="downloadDocument(doc)" title="Download">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="detail-section" *ngIf="selectedApplication.notes && selectedApplication.notes.length > 0">
+        <h3>Internal Notes</h3>
+        <div class="notes-list">
+          <div class="note-item" *ngFor="let note of selectedApplication.notes">
+            <div class="note-content">{{ note.content }}</div>
+            <div class="note-meta">{{ formatDate(note.createdAt) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeDetailModal()">Close</button>
+      <button class="btn-primary" (click)="openScoreModal(selectedApplication!)" *ngIf="selectedApplication">
+        Score Application
+      </button>
+      <button class="btn-success" (click)="acceptApplication(selectedApplication!)" *ngIf="selectedApplication && selectedApplication.status !== 'ACCEPTED'">
+        Accept
+      </button>
+      <button class="btn-danger" (click)="openRejectModal(selectedApplication!)" *ngIf="selectedApplication && selectedApplication.status !== 'REJECTED'">
+        Reject
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Score Modal -->
+<div class="modal-overlay" *ngIf="showScoreModal" (click)="closeScoreModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Score Application</h2>
+      <button class="btn-close" (click)="closeScoreModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Qualification Score (0-100)</label>
+        <input type="number" [(ngModel)]="qualificationScore" min="0" max="100">
+      </div>
+      
+      <div class="form-group">
+        <label>Presentation Score (0-100)</label>
+        <input type="number" [(ngModel)]="presentationScore" min="0" max="100">
+      </div>
+      
+      <div class="form-group">
+        <label>Overall Score (0-100)</label>
+        <input type="number" [(ngModel)]="overallScore" min="0" max="100">
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeScoreModal()">Cancel</button>
+      <button class="btn-primary" (click)="submitScore()" [disabled]="isLoading">
+        {{ isLoading ? 'Saving...' : 'Save Scores' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Interview Modal -->
+<div class="modal-overlay" *ngIf="showInterviewModal" (click)="closeInterviewModal()">
+
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>📅 Schedule Interview</h2>
+      <button class="btn-close" (click)="$event.stopPropagation(); closeInterviewModal()" type="button">×</button>
+    </div>
+    
+    <div class="modal-body">
+
+      <!-- Step 1: Date Selection with Mini Calendar -->
+      <div class="form-group">
+        <label>📅 Select Interview Date *</label>
+        <div class="date-selector-grid">
+          <button 
+            *ngFor="let day of availableDays"
+            class="date-card"
+            [class.selected]="selectedInterviewDate === day.dateStr"
+            [class.today]="day.isToday"
+            [class.weekend]="day.isWeekend"
+            (click)="$event.stopPropagation(); selectInterviewDate(day.dateStr)"
+            type="button">
+            <div class="date-card-day">{{ day.dayName }}</div>
+            <div class="date-card-date">{{ day.dayNumber }}</div>
+            <div class="date-card-month">{{ day.monthName }}</div>
+          </button>
+        </div>
+        <small class="form-hint">Select a date to see available time slots</small>
+      </div>
+
+      <!-- Step 2: Time Slots (shown after date selection) -->
+      <div *ngIf="selectedInterviewDate" class="form-group">
+        <label>🕐 Select Time Slot *</label>
+        
+        <!-- Duration Selector -->
+        <div class="duration-selector-inline">
+          <label>Duration:</label>
+          <select [(ngModel)]="durationMinutes" (change)="$event.stopPropagation(); loadAvailableTimeSlots()" class="duration-select">
+            <option [value]="30">30 min</option>
+            <option [value]="45">45 min</option>
+            <option [value]="60">60 min</option>
+            <option [value]="90">90 min</option>
+          </select>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="isCheckingAvailability" class="availability-loading">
+          <div class="spinner-small"></div>
+          <span>Checking availability...</span>
+        </div>
+
+        <!-- Time Slots Grid -->
+        <div *ngIf="!isCheckingAvailability" class="time-slots-container">
+          <button 
+            *ngFor="let slot of interviewTimeSlots"
+            class="time-slot-btn"
+            [class.available]="slot.available"
+            [class.unavailable]="!slot.available"
+            [class.selected]="selectedInterviewTimeSlot === slot.time"
+            [disabled]="!slot.available"
+            (click)="$event.stopPropagation(); selectInterviewTimeSlot(slot)"
+            [title]="slot.conflictsWith ? 'Conflict: ' + slot.conflictsWith : 'Available'"
+            type="button">
+            <svg *ngIf="slot.available" class="slot-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="20 6 9 17 4 12" stroke-width="2"/>
+            </svg>
+            <svg *ngIf="!slot.available" class="slot-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <line x1="18" y1="6" x2="6" y2="18" stroke-width="2"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke-width="2"/>
+            </svg>
+            <span class="slot-time">{{ slot.time }}</span>
+          </button>
+        </div>
+
+        <!-- Selected Summary -->
+        <div *ngIf="selectedInterviewTimeSlot" class="selected-summary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke-width="2"/>
+            <polyline points="22 4 12 14.01 9 11.01" stroke-width="2"/>
+          </svg>
+          <span>Selected: {{ formatSelectedDateTime() }}</span>
+        </div>
+      </div>
+
+      <!-- Meeting Platform Selection -->
+      <div class="form-group">
+        <label>Meeting Platform *</label>
+        <div class="platform-selector">
+          <div 
+            class="platform-option" 
+            *ngFor="let platform of [MeetingPlatform.GOOGLE_MEET, MeetingPlatform.ZOOM, MeetingPlatform.MICROSOFT_TEAMS, MeetingPlatform.MANUAL]"
+            [class.selected]="selectedPlatform === platform"
+            (click)="$event.stopPropagation(); selectedPlatform = platform">
+            <div class="platform-icon">
+              <img *ngIf="platform === MeetingPlatform.GOOGLE_MEET" 
+                   src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" 
+                   alt="Google Meet"
+                   class="platform-logo">
+              <img *ngIf="platform === MeetingPlatform.ZOOM" 
+                   src="https://upload.wikimedia.org/wikipedia/commons/7/7b/Zoom_Communications_Logo.svg" 
+                   alt="Zoom"
+                   class="platform-logo">
+              <img *ngIf="platform === MeetingPlatform.MICROSOFT_TEAMS" 
+                   src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg" 
+                   alt="Microsoft Teams"
+                   class="platform-logo">
+              <span *ngIf="platform === MeetingPlatform.MANUAL" class="manual-icon">✏️</span>
+            </div>
+            <div class="platform-name">{{ getPlatformDisplayName(platform) }}</div>
+            <div class="platform-status" *ngIf="!isPlatformAvailable(platform) && platform !== MeetingPlatform.MANUAL">
+              <small>(Placeholder mode)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto-generate section (shown when not MANUAL) -->
+      <div *ngIf="selectedPlatform !== MeetingPlatform.MANUAL" class="auto-generate-section">
+        <div class="form-group">
+          <label>Meeting Title</label>
+          <input type="text" [(ngModel)]="meetingTitle" placeholder="Interview - Candidate Name">
+        </div>
+
+        <button 
+          class="btn-generate" 
+          (click)="$event.stopPropagation(); generateMeetingLink()" 
+          [disabled]="generatingLink || !selectedInterviewDate || !selectedInterviewTimeSlot"
+          type="button">
+          <span *ngIf="!generatingLink">🔗 Generate Meeting Link</span>
+          <span *ngIf="generatingLink">⏳ Generating...</span>
+        </button>
+
+        <!-- Generated Meeting Info -->
+        <div class="meeting-info-card" *ngIf="generatedMeetingInfo">
+          <div class="info-header">
+            <span class="icon">✅</span>
+            <span>Meeting Link Generated</span>
+          </div>
+          <div class="info-body">
+            <div class="info-row">
+              <strong>Platform:</strong> {{ getPlatformDisplayName(generatedMeetingInfo.platform) }}
+            </div>
+            <div class="info-row">
+              <strong>Meeting ID:</strong> {{ generatedMeetingInfo.meetingId }}
+            </div>
+            <div class="info-row" *ngIf="generatedMeetingInfo.password">
+              <strong>Password:</strong> {{ generatedMeetingInfo.password }}
+            </div>
+            <div class="info-row">
+              <strong>Link:</strong> 
+              <a [href]="generatedMeetingInfo.meetingLink" target="_blank" class="meeting-link">
+                {{ generatedMeetingInfo.meetingLink }}
+              </a>
+            </div>
+            <div class="info-note" *ngIf="generatedMeetingInfo.additionalInfo">
+              <small>ℹ️ {{ generatedMeetingInfo.additionalInfo }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual link section (shown when MANUAL) -->
+      <div *ngIf="selectedPlatform === MeetingPlatform.MANUAL" class="manual-link-section">
+        <div class="form-group">
+          <label>Meeting Link *</label>
+          <input 
+            type="url" 
+            [(ngModel)]="meetingLink" 
+            placeholder="https://your-meeting-platform.com/meeting/123"
+            required>
+          <small class="form-hint">Enter the meeting link from your preferred platform</small>
+        </div>
+      </div>
+      
+      <!-- Notes -->
+      <div class="form-group">
+        <label>Additional Notes</label>
+        <textarea 
+          [(ngModel)]="interviewNotes" 
+          rows="3" 
+          placeholder="Any additional information for the candidate..."></textarea>
+
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="$event.stopPropagation(); closeInterviewModal()" type="button">Cancel</button>
+
+      <button 
+        class="btn-primary" 
+        (click)="$event.stopPropagation(); scheduleInterview()" 
+        type="button"
+        [disabled]="isLoading || !selectedInterviewDate || !selectedInterviewTimeSlot">
+        {{ isLoading ? 'Scheduling...' : '📅 Schedule Interview' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal-overlay" *ngIf="showRejectModal" (click)="closeRejectModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Reject Application</h2>
+      <button class="btn-close" (click)="closeRejectModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Rejection Reason * (min 20 characters)</label>
+        <textarea [(ngModel)]="rejectionReason" rows="5" 
+          placeholder="Please provide a detailed reason for rejection..."></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeRejectModal()">Cancel</button>
+      <button class="btn-danger" (click)="rejectApplication()" 
+        [disabled]="isLoading || rejectionReason.length < 20">
+        {{ isLoading ? 'Rejecting...' : 'Reject Application' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Note Modal -->
+<div class="modal-overlay" *ngIf="showNoteModal" (click)="closeNoteModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Internal Note</h2>
+      <button class="btn-close" (click)="closeNoteModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Note Content * (min 10 characters)</label>
+        <textarea [(ngModel)]="noteContent" rows="5" 
+          placeholder="Add your observations or comments..."></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeNoteModal()">Cancel</button>
+      <button class="btn-primary" (click)="addNote()" 
+        [disabled]="isLoading || noteContent.length < 10">
+        {{ isLoading ? 'Adding...' : 'Add Note' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Document Viewer Modal - Improved -->
+<div class="modal-overlay document-modal" *ngIf="showDocumentModal" (click)="closeDocumentModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        <span class="doc-icon">{{ getDocumentIcon(selectedDocument) }}</span>
+        <div class="doc-info">
+          <span class="doc-name">{{ selectedDocument?.fileName }}</span>
+          <span class="doc-meta">
+            {{ getDocumentTypeName(selectedDocument?.type) }} • 
+            {{ formatFileSize(selectedDocument?.fileSize) }}
+          </span>
+        </div>
+      </h2>
+      <button class="btn-close" (click)="closeDocumentModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Video Player -->
+      <div *ngIf="isVideoDocument(selectedDocument)" class="video-container">
+        <video controls class="video-player" autoplay>
+          <source [src]="documentViewerUrl" [type]="selectedDocument?.fileType">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      
+      <!-- PDF Viewer -->
+      <div *ngIf="isPdfDocument(selectedDocument)" class="pdf-container">
+        <iframe [src]="getSafeUrl(documentViewerUrl)" class="pdf-viewer"></iframe>
+      </div>
+      
+      <!-- Image Viewer -->
+      <div *ngIf="isImageDocument(selectedDocument)" class="image-container">
+        <img [src]="documentViewerUrl" [alt]="selectedDocument?.fileName" class="image-viewer">
+      </div>
+      
+      <!-- Other Documents -->
+      <div *ngIf="!isVideoDocument(selectedDocument) && !isPdfDocument(selectedDocument) && !isImageDocument(selectedDocument)" 
+           class="document-download-prompt">
+        <div class="download-icon">📥</div>
+        <h3>Preview not available</h3>
+        <p>This file type cannot be previewed in the browser. Click below to download.</p>
+        <button class="btn-download" (click)="downloadDocument(selectedDocument)">
+          <span>📥</span>
+          Download {{ selectedDocument?.fileName }}
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="document-info">
+        <div class="info-item">
+          <span class="icon">📅</span>
+          <span>Uploaded: {{ formatDate(selectedDocument?.uploadedAt) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="icon">📦</span>
+          <span>Size: {{ formatFileSize(selectedDocument?.fileSize) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="icon">📄</span>
+          <span>Type: {{ getDocumentTypeName(selectedDocument?.type) }}</span>
+        </div>
+      </div>
+      <div class="document-actions">
+        <button class="btn-action btn-download" (click)="downloadDocument(selectedDocument)">
+          <span>⬇️</span>
+          Download
+        </button>
+        <button class="btn-action btn-close-footer" (click)="closeDocumentModal()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Interview Success Modal -->
+<div class="modal-overlay" *ngIf="showInterviewSuccessModal" (click)="closeInterviewSuccessModal()">
+  <div class="modal-content modal-success" (click)="$event.stopPropagation()">
+    <div class="modal-header success-header">
+      <div class="success-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="22 4 12 14.01 9 11.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>{{ isViewingExistingInterview ? 'Interview Details' : 'Interview Scheduled Successfully!' }}</h2>
+      <button class="btn-close" (click)="closeInterviewSuccessModal()" type="button">×</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="scheduledInterviewInfo">
+      <div class="success-message" *ngIf="!isViewingExistingInterview">
+        <p>The interview has been scheduled and an email notification has been sent to the candidate.</p>
+      </div>
+      
+      <div class="success-message" *ngIf="isViewingExistingInterview">
+        <p>View and manage this scheduled interview. You can join the meeting or copy the link.</p>
+      </div>
+
+      <div class="interview-details-card">
+        <h3>📋 Interview Details</h3>
+        
+        <div class="detail-row">
+          <span class="detail-label">Candidate:</span>
+          <span class="detail-value">{{ scheduledInterviewInfo.candidateName }}</span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">Date & Time:</span>
+          <span class="detail-value">{{ scheduledInterviewInfo.dateTime }}</span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">Duration:</span>
+          <span class="detail-value">{{ scheduledInterviewInfo.duration }} minutes</span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">Platform:</span>
+          <span class="detail-value">{{ scheduledInterviewInfo.platform }}</span>
+        </div>
+      </div>
+
+      <div class="meeting-link-card">
+        <h3>🔗 Meeting Link</h3>
+        <p class="link-instruction">Use this link to join the interview. The candidate has received the same link.</p>
+        
+        <div class="link-display">
+          <input 
+            type="text" 
+            [value]="scheduledInterviewInfo.meetingLink" 
+            readonly 
+            class="link-input"
+            #meetingLinkInput
+            (click)="meetingLinkInput.select()">
+          <button 
+            class="btn-copy" 
+            (click)="$event.stopPropagation(); copyMeetingLink()"
+            type="button"
+            title="Copy link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button 
+          class="btn-join-meeting" 
+          (click)="$event.stopPropagation(); joinMeeting()"
+          type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Join Meeting Now
+        </button>
+        
+        <button 
+          class="btn-done" 
+          (click)="$event.stopPropagation(); closeInterviewSuccessModal()"
+          type="button">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,182 @@
+// Animations
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+.prose {
+  line-height: 1.75;
+  
+  p {
+    margin-bottom: 1em;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Carousel custom scrollbar
+.scrollbar-thin {
+  scrollbar-width: thin;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+    
+    &:hover {
+      background: #a0aec0;
+    }
+  }
+}
+
+// Dictionary feature styles
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+// Floating dictionary button
+.dictionary-float-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999 !important;
+  animation: float 3s ease-in-out infinite, pulse-ring 2s infinite;
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+  
+  &:hover {
+    animation: pulse-ring 2s infinite;
+    box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
+  }
+}
+
+// Dictionary hint tooltip
+.dictionary-hint {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 2rem;
+  z-index: 9999 !important;
+  animation: slide-in-right 0.3s ease-out;
+}
+
+// Word hover effect in content
+[appWordLookup] {
+  cursor: text;
+  
+  &::selection {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: inherit;
+  }
+}
+
+// Add subtle highlight on word selection
+.topic-content, .post-content {
+  user-select: text;
+  
+  p, div, span {
+    position: relative;
+    
+    &:hover {
+      cursor: text;
+    }
+  }
+}
+
+
+// TTS Control animations
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Removed duplicate animate-slide-up class

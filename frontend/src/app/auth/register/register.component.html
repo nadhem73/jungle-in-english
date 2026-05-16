@@ -1,0 +1,352 @@
+<div class="register-background">
+  <!-- Animated Background Shapes -->
+  <div class="bg-shape shape-1"></div>
+  <div class="bg-shape shape-2"></div>
+  <div class="bg-shape shape-3"></div>
+
+  <!-- Register Container -->
+  <div class="register-container">
+    <div class="register-card">
+      
+      <!-- Header Section -->
+      <div class="header-section">
+        <h1 class="brand-name">JUNGLE IN ENGLISH</h1>
+        <p class="brand-tagline">Create your account to start learning</p>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-steps">
+          <div class="step-item" *ngFor="let step of [1,2,3]; let i = index">
+            <button 
+              type="button"
+              (click)="goToStep(step)"
+              [disabled]="step > currentStep && !isStepValid(step - 1)"
+              class="step-circle"
+              [class.active]="currentStep === step"
+              [class.completed]="currentStep > step"
+              [class.inactive]="currentStep < step">
+              <svg *ngIf="currentStep > step" style="width: 18px; height: 18px;" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+              </svg>
+              <span *ngIf="currentStep <= step">{{ step }}</span>
+            </button>
+            <div *ngIf="i < 2" class="step-line">
+              <div class="step-line-fill" [style.width]="currentStep > step ? '100%' : '0%'"></div>
+            </div>
+          </div>
+        </div>
+        <div class="progress-labels">
+          <button type="button" (click)="goToStep(1)" [class.active]="currentStep === 1" class="progress-label">Basic Info</button>
+          <button type="button" (click)="goToStep(2)" [disabled]="!isStepValid(1)" [class.active]="currentStep === 2" class="progress-label">Details</button>
+          <button type="button" (click)="goToStep(3)" [disabled]="!isStepValid(2)" [class.active]="currentStep === 3" class="progress-label">Profile</button>
+        </div>
+      </div>
+
+      <!-- Error Alert -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        <svg fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Register Form -->
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Step 1: Basic Info -->
+        <div *ngIf="currentStep === 1" class="form-step animate-fadeIn">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <input 
+                  type="text" 
+                  formControlName="firstName"
+                  class="form-input"
+                  [class.error]="shouldShowFieldError('firstName', firstNameTouched)"
+                  [class.success]="isFieldValid('firstName') && hasValue('firstName')"
+                  placeholder="Enter first name"
+                  (focus)="onFieldFocus('firstName')"
+                  (blur)="onFieldBlur('firstName')">
+                <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <div *ngIf="shouldShowFieldError('firstName', firstNameTouched)" class="error-message">
+                  <span *ngIf="firstName?.errors?.['required']">First name is required</span>
+                  <span *ngIf="firstName?.errors?.['minlength']">Min 2 characters</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Last Name <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <input 
+                  type="text" 
+                  formControlName="lastName"
+                  class="form-input"
+                  [class.error]="shouldShowFieldError('lastName', lastNameTouched)"
+                  [class.success]="isFieldValid('lastName') && hasValue('lastName')"
+                  placeholder="Enter last name"
+                  (focus)="onFieldFocus('lastName')"
+                  (blur)="onFieldBlur('lastName')">
+                <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <div *ngIf="shouldShowFieldError('lastName', lastNameTouched)" class="error-message">
+                  <span *ngIf="lastName?.errors?.['required']">Last name is required</span>
+                  <span *ngIf="lastName?.errors?.['minlength']">Min 2 characters</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <input 
+                type="email" 
+                formControlName="email"
+                class="form-input"
+                [class.error]="shouldShowFieldError('email', emailTouched)"
+                [class.success]="isFieldValid('email') && hasValue('email')"
+                placeholder="your.email@example.com"
+                (focus)="onFieldFocus('email')"
+                (blur)="onFieldBlur('email')">
+              <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+              <div *ngIf="shouldShowFieldError('email', emailTouched)" class="error-message">
+                <span *ngIf="email?.errors?.['required']">Email is required</span>
+                <span *ngIf="email?.errors?.['email']">Invalid email format</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <input 
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                class="form-input"
+                [class.error]="shouldShowFieldError('password', passwordTouched)"
+                [class.success]="isFieldValid('password') && hasValue('password')"
+                placeholder="Enter password (min 8 characters)"
+                (focus)="onFieldFocus('password')"
+                (blur)="onFieldBlur('password')">
+              <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              <button type="button" class="toggle-password" (click)="togglePasswordVisibility()">
+                <svg *ngIf="!showPassword" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                <svg *ngIf="showPassword" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                </svg>
+              </button>
+              <div *ngIf="shouldShowFieldError('password', passwordTouched)" class="error-message">
+                <span *ngIf="password?.errors?.['required']">Password is required</span>
+                <span *ngIf="password?.errors?.['minlength']">Min 8 characters</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirm Password <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <input 
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                formControlName="confirmPassword"
+                class="form-input"
+                [class.error]="shouldShowFieldError('confirmPassword', confirmPasswordTouched)"
+                [class.success]="isFieldValid('confirmPassword') && hasValue('confirmPassword')"
+                placeholder="Re-enter your password"
+                (focus)="onFieldFocus('confirmPassword')"
+                (blur)="onFieldBlur('confirmPassword')">
+              <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.414-4.414a2 2 0 010 2.828L13.828 15a2 2 0 01-2.828 0l-4.586-4.586a2 2 0 010-2.828l.586-.586a2 2 0 012.828 0L11 9.172l4.586-4.586a2 2 0 012.828 0l.586.586z"></path>
+              </svg>
+              <button type="button" class="toggle-password" (click)="toggleConfirmPasswordVisibility()">
+                <svg *ngIf="!showConfirmPassword" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                <svg *ngIf="showConfirmPassword" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                </svg>
+              </button>
+              <div *ngIf="shouldShowFieldError('confirmPassword', confirmPasswordTouched)" class="error-message">
+                <span *ngIf="confirmPassword?.errors?.['required']">Please confirm password</span>
+                <span *ngIf="confirmPassword?.errors?.['passwordMismatch']">Passwords don't match</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Personal Details -->
+        <div *ngIf="currentStep === 2" class="form-step animate-fadeIn">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">CIN Number <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <input 
+                  type="text" 
+                  formControlName="cin"
+                  class="form-input"
+                  [class.error]="shouldShowFieldError('cin', cinTouched)"
+                  [class.success]="isFieldValid('cin') && hasValue('cin')"
+                  placeholder="Enter CIN number"
+                  (focus)="onFieldFocus('cin')"
+                  (blur)="onFieldBlur('cin')">
+                <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                </svg>
+                <div *ngIf="shouldShowFieldError('cin', cinTouched)" class="error-message">
+                  <span *ngIf="cin?.errors?.['required']">CIN is required</span>
+                  <span *ngIf="cin?.errors?.['invalidCin']">CIN must contain only numbers</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Date of Birth <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <input 
+                  type="date" 
+                  formControlName="dateOfBirth"
+                  [max]="maxDate"
+                  class="form-input"
+                  [class.error]="shouldShowFieldError('dateOfBirth', dateOfBirthTouched)"
+                  [class.success]="isFieldValid('dateOfBirth') && hasValue('dateOfBirth')"
+                  (focus)="onFieldFocus('dateOfBirth')"
+                  (blur)="onFieldBlur('dateOfBirth')">
+                <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <div *ngIf="shouldShowFieldError('dateOfBirth', dateOfBirthTouched)" class="error-message">
+                  <span *ngIf="dateOfBirth?.errors?.['required']">Date of birth is required</span>
+                  <span *ngIf="dateOfBirth?.errors?.['minAge']">Must be at least 13 years old</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <app-phone-input formControlName="phone"></app-phone-input>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <div class="input-wrapper">
+              <input 
+                type="text" 
+                formControlName="address"
+                class="form-input"
+                placeholder="Enter your address (Optional)"
+                (focus)="onFieldFocus('address')"
+                (blur)="onFieldBlur('address')">
+              <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Profile -->
+        <div *ngIf="currentStep === 3" class="form-step animate-fadeIn">
+          <div class="form-group">
+            <label class="form-label">English Level <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <select 
+                formControlName="englishLevel"
+                class="form-input"
+                [class.error]="shouldShowFieldError('englishLevel', englishLevelTouched)"
+                [class.success]="isFieldValid('englishLevel') && hasValue('englishLevel')"
+                (focus)="onFieldFocus('englishLevel')"
+                (blur)="onFieldBlur('englishLevel')">
+                <option value="">Select your English level</option>
+                <option *ngFor="let level of englishLevels" [value]="level.value">{{ level.label }}</option>
+              </select>
+              <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <div *ngIf="shouldShowFieldError('englishLevel', englishLevelTouched)" class="error-message">
+                <span>Please select your English level</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Bio</label>
+            <div class="input-wrapper">
+              <textarea 
+                formControlName="bio"
+                rows="3"
+                class="form-input"
+                style="padding-left: 3rem;"
+                placeholder="Tell us about yourself..."
+                (focus)="onFieldFocus('bio')"
+                (blur)="onFieldBlur('bio')"></textarea>
+              <svg class="input-icon" style="top: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- reCAPTCHA -->
+          <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+            <div style="transform: scale(0.85); transform-origin: center;">
+              <re-captcha
+                [siteKey]="siteKey"
+                (resolved)="onCaptchaResolved($event)"
+                size="normal"
+              ></re-captcha>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="form-navigation">
+          <button 
+            *ngIf="currentStep > 1"
+            type="button" 
+            (click)="previousStep()" 
+            class="btn-secondary">
+            ← Previous
+          </button>
+          <button 
+            *ngIf="currentStep < totalSteps"
+            type="button" 
+            (click)="nextStep()" 
+            [disabled]="!isStepValid(currentStep)"
+            class="btn-primary"
+            [style.margin-left]="currentStep === 1 ? 'auto' : '0'">
+            Next →
+          </button>
+          <button 
+            *ngIf="currentStep === totalSteps"
+            type="submit" 
+            [disabled]="loading || registerForm.invalid || !recaptchaToken"
+            class="btn-primary">
+            <span *ngIf="!loading">Create Account</span>
+            <span *ngIf="loading" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+              <span class="spinner"></span>
+              <span>Creating...</span>
+            </span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Sign In Link -->
+      <p class="signup-link">
+        Already have an account? <a routerLink="/login">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,776 @@
+name: jungle-in-english
+
+services:
+  # ==================== Infrastructure ====================
+  
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: englishflow-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../devops/database/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    networks:
+      - englishflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: englishflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - englishflow-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # ==================== Service Discovery ====================
+  
+  # Eureka Server
+  eureka-server:
+    build:
+      context: ../../backend/eureka-server
+      dockerfile: Dockerfile
+    container_name: englishflow-eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - englishflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  # ==================== API Gateway ====================
+  
+  api-gateway:
+    build:
+      context: ../../backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: englishflow-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - englishflow-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # ==================== Microservices ====================
+  
+  # Auth Service
+  auth-service:
+    build:
+      context: ../../backend/auth-service
+      dockerfile: Dockerfile
+    container_name: englishflow-auth
+    ports:
+      - "8081:8081"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    volumes:
+      - auth_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - DB_URL=jdbc:postgresql://postgres:5432/englishflow_identity
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=auth-service
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - RECAPTCHA_SECRET=${RECAPTCHA_SECRET}
+      - FRONTEND_URL=http://localhost:4200
+      - BACKEND_URL=http://localhost:8080
+
+  # Courses Service
+  courses-service:
+    build:
+      context: ../../backend/courses-service
+      dockerfile: Dockerfile
+    container_name: englishflow-courses
+    ports:
+      - "8086:8086"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    volumes:
+      - courses_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8086
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=courses-service
+      - DB_URL=jdbc:postgresql://postgres:5432/englishflow_courses
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true
+
+  # Learning Service
+  learning-service:
+    build:
+      context: ../../backend/learning-service
+      dockerfile: Dockerfile
+    container_name: englishflow-learning
+    ports:
+      - "8083:8083"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    volumes:
+      - learning_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=learning-service
+      - DB_URL=jdbc:postgresql://postgres:5432/englishflow_learning_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Messaging Service
+  messaging-service:
+    build:
+      context: ../../backend/messaging-service
+      dockerfile: Dockerfile
+    container_name: englishflow-messaging
+    ports:
+      - "8084:8084"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    volumes:
+      - messaging_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=messaging-service
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=englishflow_messaging_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Club Service
+  club-service:
+    build:
+      context: ../../backend/club-service
+      dockerfile: Dockerfile
+    container_name: englishflow-club
+    ports:
+      - "8085:8085"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8085
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=club-service
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=englishflow_jungle_club_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Community Service
+  community-service:
+    build:
+      context: ../../backend/community-service
+      dockerfile: Dockerfile
+    container_name: englishflow-community
+    ports:
+      - "8082:8082"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    volumes:
+      - community_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8082
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=community-service
+      - DB_URL=jdbc:postgresql://postgres:5432/englishflow_community
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Event Service
+  event-service:
+    build:
+      context: ../../backend/event-service
+      dockerfile: Dockerfile
+    container_name: englishflow-event
+    ports:
+      - "8088:8088"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8088/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8088
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=event-service
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=englishflow_event_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Gamification Service
+  gamification-service:
+    build:
+      context: ../../backend/gamification-service
+      dockerfile: Dockerfile
+    container_name: englishflow-gamification
+    ports:
+      - "8091:8091"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8091/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8091
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=gamification-service
+      - DB_URL=jdbc:postgresql://postgres:5432/englishflow_gamification
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ../../backend/payment-service
+      dockerfile: Dockerfile
+    container_name: englishflow-payment
+    ports:
+      - "8089:8089"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8089/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8089
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=payment-service
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=englishflow_payment
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Complaints Service
+  complaints-service:
+    build:
+      context: ../../backend/complaints-service
+      dockerfile: Dockerfile
+    container_name: englishflow-complaints
+    ports:
+      - "8087:8087"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8087/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8087
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=complaints-service
+      - DB_URL=jdbc:postgresql://postgres:5432/englishflow_complaints
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Exam Service
+  exam-service:
+    build:
+      context: ../../backend/exam-service
+      dockerfile: Dockerfile
+    container_name: englishflow-exam
+    ports:
+      - "8090:8090"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8090
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=exam-service
+      - DB_URL=jdbc:postgresql://postgres:5432/englishflow_exams
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # Sponsors Service
+  sponsors-service:
+    build:
+      context: ../../backend/sponsors-service
+      dockerfile: Dockerfile
+    container_name: englishflow-sponsors
+    ports:
+      - "8092:8092"
+    networks:
+      - englishflow-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8092/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SERVER_PORT=8092
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_HOSTNAME=sponsors-service
+      - DB_URL=jdbc:postgresql://postgres:5432/englishflow_sponsors_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET:-englishflow-jwt-secret-key-for-development-only-change-in-production-minimum-256-bits}
+
+  # WebRTC Signaling Service
+  webrtc-signaling:
+    build:
+      context: ../../backend/webrtc-signaling
+      dockerfile: Dockerfile
+    container_name: englishflow-webrtc
+    ports:
+      - "3001:3001"
+    networks:
+      - englishflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+
+  # ==================== Monitoring ====================
+  
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: englishflow-prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - englishflow-network
+    volumes:
+      - ../../devops/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../../devops/monitoring/alert-rules.yml:/etc/prometheus/alert-rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: englishflow-grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - englishflow-network
+    depends_on:
+      - prometheus
+      - loki
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../../devops/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ../../devops/monitoring/grafana-dashboard-working.json:/etc/grafana/provisioning/dashboards/englishflow.json
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # Jaeger - Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: englishflow-jaeger
+    ports:
+      - "5775:5775/udp"     # Zipkin compact thrift
+      - "6831:6831/udp"     # Jaeger compact thrift
+      - "6832:6832/udp"     # Jaeger binary thrift
+      - "5778:5778"         # Serve configs
+      - "16686:16686"       # Jaeger UI
+      - "14268:14268"       # Jaeger collector HTTP
+      - "14250:14250"       # Jaeger gRPC
+      - "9411:9411"         # Zipkin compatible endpoint
+    networks:
+      - englishflow-network
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=memory
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:14269/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: englishflow-loki
+    ports:
+      - "3100:3100"
+    networks:
+      - englishflow-network
+    user: "0:0"
+    volumes:
+      - ../../devops/monitoring/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    restart: unless-stopped
+
+  # Promtail - Log Collector for Loki
+  promtail:
+    image: grafana/promtail:latest
+    container_name: englishflow-promtail
+    networks:
+      - englishflow-network
+    depends_on:
+      - loki
+    volumes:
+      - ../../devops/monitoring/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - ../../backend/auth-service/logs:/logs/auth-service:ro
+      - ../../backend/club-service/logs:/logs/club-service:ro
+      - ../../backend/community-service/logs:/logs/community-service:ro
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+
+  # Config Server
+  config-server:
+    build:
+      context: ../../backend/config-server
+      dockerfile: Dockerfile
+    container_name: englishflow-config
+    ports:
+      - "8888:8888"
+    networks:
+      - englishflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  # cAdvisor - Container Monitoring
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: englishflow-cadvisor
+    ports:
+      - "8093:8080"
+    networks:
+      - englishflow-network
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    restart: unless-stopped
+
+  # ==================== Frontend ====================
+  
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    container_name: englishflow-frontend
+    ports:
+      - "4200:80"
+    networks:
+      - englishflow-network
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+# ==================== Networks ====================
+networks:
+  englishflow-network:
+    driver: bridge
+
+# ==================== Volumes ====================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  auth_uploads:
+    driver: local
+  courses_uploads:
+    driver: local
+  messaging_uploads:
+    driver: local
+  community_uploads:
+    driver: local
+  learning_uploads:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  jaeger_data:
+    driver: local
+  loki_data:
+    driver: local
